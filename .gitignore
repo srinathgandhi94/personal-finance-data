@@ -1,0 +1,15 @@
+# Environment and secrets
+.env
+Creds/
+*.json
+!package.json
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Logs (optional: remove if you want to track logs)
+Logs/
