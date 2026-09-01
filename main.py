@@ -1,4 +1,5 @@
-import os
+import sys
+import subprocess
 import logging
 from datetime import datetime
 from calendar import monthrange
@@ -57,29 +58,29 @@ logging.basicConfig(
 )
 
 logging.info("Starting the Import Portfolio process...")
-os.system("python importPortfolio.py")
+subprocess.run([sys.executable, "importPortfolio.py"], check=True)
 logging.info("Import Portfolio process completed.\n")
 
 logging.info("Starting the Import Transactions process...")
-os.system("python importTransactions.py")
+subprocess.run([sys.executable, "importTransactions.py"], check=True)
 logging.info("Import Transactions process completed.\n")
 
 logging.info("Starting the Import Price History MF process...")
-os.system("python importPriceHistoryMF.py")
+subprocess.run([sys.executable, "importPriceHistoryMF.py"], check=True)
 logging.info("Import Price History MF process completed.\n")
 
 logging.info("Starting the Upsert Price History MF ODS process...")
-os.system("python upsertPriceHistoryMFODS.py")
+subprocess.run([sys.executable, "upsertPriceHistoryMFODS.py"], check=True)
 logging.info("Upsert Price History MF ODS process completed.\n")
 
 logging.info("Starting the Import Price History Stocks process...")
-os.system("python importPriceHistoryStocks.py")
+subprocess.run([sys.executable, "importPriceHistoryStocks.py"], check=True)
 logging.info("Import Price History Stocks process completed.\n")
 
 logging.info("Starting the Upsert Price History Stocks ODS process...")
-os.system("python upsertPriceHistoryStockODS.py")
+subprocess.run([sys.executable, "upsertPriceHistoryStockODS.py"], check=True)
 logging.info("Upsert Price History Stocks ODS process completed.\n")
 
 logging.info("Starting the Import Investment Report process...")
-os.system("python importInvestmentReport.py")
+subprocess.run([sys.executable, "importInvestmentReport.py"], check=True)
 logging.info("Import Investment Report process completed.\n")

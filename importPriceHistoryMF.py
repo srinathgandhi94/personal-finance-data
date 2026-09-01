@@ -183,8 +183,14 @@ def main():
         worksheet.update_acell("A1", finance_query)
         verify_formula_loaded(worksheet)
         df = get_sheet_data(worksheet, ticker_code)
+        if df is None or df.empty:
+            logging.warning(f"No data returned for ticker: {ticker_code}")
+            continue
+
         df["Platform"] = row["Platform"]
-        total_row_count = total_row_count + write_to_staging_table(engine, df)
+        inserted_rows = write_to_staging_table(engine, df)
+        if inserted_rows is not None:
+            total_row_count = total_row_count + inserted_rows
         total_scrip_count = total_scrip_count + 1
         time.sleep(5)
 
