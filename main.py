@@ -46,6 +46,7 @@ def delete_old_logs(log_directory: Path, cutoff_date: datetime) -> None:
 
 log_directory = Path("Logs")
 log_directory.mkdir(parents=True, exist_ok=True)
+Path("Logs\\Main").mkdir(parents=True, exist_ok=True)
 # NOTE: "6 months" is treated as 6 calendar months from today's date.
 delete_old_logs(log_directory, get_six_months_ago(start_time))
 
@@ -84,3 +85,7 @@ logging.info("Upsert Price History Stocks ODS process completed.\n")
 logging.info("Starting the Import Investment Report process...")
 subprocess.run([sys.executable, "importInvestmentReport.py"], check=True)
 logging.info("Import Investment Report process completed.\n")
+
+logging.info("Starting the Import Expense Manager process...")
+subprocess.run([sys.executable, "importExpenseManager.py"], check=True)
+logging.info("Import Expense Manager process completed.\n")

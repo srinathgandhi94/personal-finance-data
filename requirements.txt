@@ -4,3 +4,4 @@ psycopg2-binary
 google-auth
 gspread
 python-dotenv
+openpyxl

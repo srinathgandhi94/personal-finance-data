@@ -92,6 +92,9 @@ def main():
 
     start_time = datetime.today()
 
+    from pathlib import Path
+    Path("Logs\\ImportInvestmentReport").mkdir(parents=True, exist_ok=True)
+
     log_filename = start_time.strftime(
         "Logs\\ImportInvestmentReport\\importInvestmentReport%Y%m%d_%H%M%S.log"
     )

@@ -82,6 +82,10 @@ def upsert_to_ods_table(engine, df, ods_table, start_time):
 
 def main():
     start_time = datetime.today()
+
+    from pathlib import Path
+    Path("Logs\\UpsertPriceHistoryStockODS").mkdir(parents=True, exist_ok=True)
+
     log_filename = start_time.strftime("Logs\\UpsertPriceHistoryStockODS\\upsertPriceHistoryStockODS_%Y%m%d_%H%M%S.log")
 
     logging.basicConfig(level=logging.INFO, 

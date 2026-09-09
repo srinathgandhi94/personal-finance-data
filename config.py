@@ -15,6 +15,7 @@ DATABASE_URL: str = os.environ.get("DATABASE_URL") or ""
 GOOGLE_CREDENTIALS_PATH: str = os.environ.get("GOOGLE_CREDENTIALS_PATH") or ""
 GOOGLE_SHEET_ID_PORTFOLIO: str = os.environ.get("GOOGLE_SHEET_ID_PORTFOLIO") or ""
 GOOGLE_SHEET_ID_INVESTMENT_REPORT: str = os.environ.get("GOOGLE_SHEET_ID_INVESTMENT_REPORT") or ""
+WALLET_REPORT_FILE: str = os.environ.get("WALLET_REPORT_FILE") or ""
 
 if not DATABASE_URL:
     raise ValueError(
@@ -31,6 +32,11 @@ if not GOOGLE_SHEET_ID_PORTFOLIO:
 if not GOOGLE_SHEET_ID_INVESTMENT_REPORT:
     raise ValueError(
         "GOOGLE_SHEET_ID_INVESTMENT_REPORT environment variable is required. Set it in .env file."
+    )
+
+if not WALLET_REPORT_FILE:
+    raise ValueError(
+        "WALLET_REPORT_FILE environment variable is required. Set it in .env file."
     )
 
 # Normalize path for Windows
