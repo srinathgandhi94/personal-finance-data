@@ -2,6 +2,7 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 from datetime import datetime
 import logging
+from loggingSetup import setup_logging
 
 from config import DATABASE_URL, WALLET_REPORT_FILE
 
@@ -78,17 +79,27 @@ def transform_data(df: pd.DataFrame, start_time: datetime) -> pd.DataFrame | Non
     df = df[expected_columns].copy()
 
     # Type conversions
-    for col in ["Amount", "RefCurrencyAmount", "GpsLatitude", "GpsLongitude", "GpsAccuracyInMeters"]:
+    for col in [
+        "Amount",
+        "RefCurrencyAmount",
+        "GpsLatitude",
+        "GpsLongitude",
+        "GpsAccuracyInMeters",
+    ]:
         df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    df["WarrantyInMonth"] = pd.to_numeric(df["WarrantyInMonth"], errors="coerce").astype("Int64")
+    df["WarrantyInMonth"] = pd.to_numeric(
+        df["WarrantyInMonth"], errors="coerce"
+    ).astype("Int64")
 
     df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
 
     # Boolean columns may come in as TRUE/FALSE strings or Python booleans
     for col in ["Transfer", "CustomCategory"]:
         if df[col].dtype == object:
-            df[col] = df[col].map({"TRUE": True, "FALSE": False, True: True, False: False})
+            df[col] = df[col].map(
+                {"TRUE": True, "FALSE": False, True: True, False: False}
+            )
         df[col] = df[col].astype("boolean")
 
     df.replace("", pd.NA, inplace=True)
@@ -102,7 +113,9 @@ def transform_data(df: pd.DataFrame, start_time: datetime) -> pd.DataFrame | Non
 def write_to_ods_table(engine, df: pd.DataFrame) -> None:
     try:
         logging.info("Writing data to ExpenseManager table")
-        df.to_sql("ExpenseManager", con=engine, schema="ods", if_exists="append", index=False)
+        df.to_sql(
+            "ExpenseManager", con=engine, schema="ods", if_exists="append", index=False
+        )
         logging.info(f"Rows inserted: {len(df)}")
     except Exception as e:
         logging.error(f"Error writing data to ExpenseManager table: {e}")
@@ -113,17 +126,14 @@ def main() -> None:
     start_time = datetime.today()
 
     from pathlib import Path
+
     Path("Logs\\ImportExpenseManager").mkdir(parents=True, exist_ok=True)
 
     log_filename = start_time.strftime(
         "Logs\\ImportExpenseManager\\importExpenseManager_%Y%m%d_%H%M%S.log"
     )
 
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(levelname)s - %(message)s",
-        handlers=[logging.FileHandler(log_filename), logging.StreamHandler()],
-    )
+    setup_logging(log_filename)
 
     logging.info("Script started")
 

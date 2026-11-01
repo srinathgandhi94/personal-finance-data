@@ -7,8 +7,10 @@ from gspread.exceptions import SpreadsheetNotFound
 import threading
 import time
 import logging
+from loggingSetup import setup_logging
 
 from config import GOOGLE_CREDENTIALS_PATH, GOOGLE_SHEET_ID_PORTFOLIO, DATABASE_URL
+
 
 def get_credentials(creds_file, scopes):
     try:
@@ -16,6 +18,7 @@ def get_credentials(creds_file, scopes):
     except Exception as e:
         logging.error(f"Error loading credentials: {e}")
         return None
+
 
 def get_worksheet(creds, sheet_id):
     try:
@@ -29,7 +32,8 @@ def get_worksheet(creds, sheet_id):
     except Exception as e:
         logging.error(f"Error accessing spreadsheet: {e}")
         return None
-    
+
+
 def get_engine():
     try:
         engine = create_engine(DATABASE_URL)
@@ -38,46 +42,54 @@ def get_engine():
         logging.error(f"Error connecting to Postgresql: {e}")
         return None
 
+
 def truncate_table(engine):
     try:
         with engine.begin() as conn:
             logging.info("Connection Established")
             logging.info("Truncating priceHistoryStocks table")
-            conn.execute(text('''TRUNCATE stg."priceHistoryStocks" RESTART IDENTITY'''))
-            
+            conn.execute(text("""TRUNCATE stg."priceHistoryStocks" RESTART IDENTITY"""))
+
     except Exception as e:
         logging.error(f"Error truncating priceHistoryStocks table: {e}")
         return None
-    
+
+
 def verify_formula_loaded(worksheet):
     try:
         # Verify if formula loaded correctly
         logging.info("--Verify if formula loaded correctly")
-        thread = threading.Thread(target=background_formula_load_check, args=(worksheet,))
+        thread = threading.Thread(
+            target=background_formula_load_check, args=(worksheet,)
+        )
         thread.start()
-    
+
         # wait here for the result to be available before continuing
         thread.join()
         logging.info("--Formula loaded successfully")
-        
+
     except Exception as e:
         logging.error(f"Error checking formula load: {e}")
+
 
 def background_formula_load_check(worksheet, max_retries=3, sleep_interval=5):
     retries = 0
     while retries < max_retries:
         try:
-            if worksheet.acell('B1').value == "Open":
+            if worksheet.acell("B1").value == "Open":
                 logging.info("--Formula loaded successfully in background check")
                 return
             else:
-                logging.info(f"--Formula not loaded yet, retrying... ({retries + 1}/{max_retries})")
+                logging.info(
+                    f"--Formula not loaded yet, retrying... ({retries + 1}/{max_retries})"
+                )
                 time.sleep(sleep_interval)
                 retries += 1
         except Exception as e:
             logging.error(f"Error checking formula load: {e}")
             time.sleep(sleep_interval)
             retries += 1
+
 
 def get_ticker_list(engine):
     try:
@@ -92,32 +104,50 @@ def get_ticker_list(engine):
                 WHERE pf."Category" IN ('Stocks', 'ETF')
                 AND pf."TickerCode" <> 'NSE:FRETAIL'
                 GROUP BY tr."TickerCode", tr."Platform"'''
-        
+
         return pd.read_sql(query, engine)
-            
+
     except Exception as e:
         logging.error(f"Error fetching ticker list: {e}")
         return None
+
 
 def get_sheet_data(worksheet, ticker_code):
     try:
         df = pd.DataFrame(worksheet.get_all_records())
         df["Date"] = pd.to_datetime(df["Date"]).dt.date
-        df.rename(columns={"Date": "Date",  "Open": "Open", "High": "High", "Low": "Low", "Close": "Close", "Volume": "Volume"}, inplace=True)
-        df['TickerCode'] = ticker_code
+        df.rename(
+            columns={
+                "Date": "Date",
+                "Open": "Open",
+                "High": "High",
+                "Low": "Low",
+                "Close": "Close",
+                "Volume": "Volume",
+            },
+            inplace=True,
+        )
+        df["TickerCode"] = ticker_code
         df.replace("", pd.NA, inplace=True)
 
         return df
-    
+
     except Exception as e:
         logging.error(f"Error reading data from Google Sheets: {e}")
         return None
+
 
 def write_to_staging_table(engine, df):
     try:
         # Write data to staging table
         logging.info("--Writing data to priceHistoryStocks table")
-        df.to_sql('priceHistoryStocks', con=engine, schema='stg', if_exists='append', index=False)
+        df.to_sql(
+            "priceHistoryStocks",
+            con=engine,
+            schema="stg",
+            if_exists="append",
+            index=False,
+        )
         row_count = df.shape[0]
         logging.info(f"--Rows inserted: {row_count}")
         return row_count
@@ -125,15 +155,15 @@ def write_to_staging_table(engine, df):
     except Exception as e:
         logging.error(f"Error writing data to priceHistoryStocks table: {e}")
         return None
-    
+
 
 def main():
-    scopes = ['https://www.googleapis.com/auth/spreadsheets']
+    scopes = ["https://www.googleapis.com/auth/spreadsheets"]
     sheet_id = GOOGLE_SHEET_ID_PORTFOLIO
     creds_file = GOOGLE_CREDENTIALS_PATH
 
     start_date = "1900-01-01"
-    end_date = datetime.today().strftime('%Y-%m-%d')
+    end_date = datetime.today().strftime("%Y-%m-%d")
     ticker_code = ""
     finance_query = f""""""
     total_row_count = 0
@@ -142,24 +172,22 @@ def main():
     start_time = datetime.today()
 
     from pathlib import Path
+
     Path("Logs\\ImportPriceHistoryStocks").mkdir(parents=True, exist_ok=True)
 
-    log_filename = start_time.strftime("Logs\\ImportPriceHistoryStocks\\importPriceHistoryStocks_%Y%m%d_%H%M%S.log")
+    log_filename = start_time.strftime(
+        "Logs\\ImportPriceHistoryStocks\\importPriceHistoryStocks_%Y%m%d_%H%M%S.log"
+    )
 
-    logging.basicConfig(level=logging.INFO, 
-                    format='%(asctime)s - %(levelname)s - %(message)s',
-                    handlers=[
-                        logging.FileHandler(log_filename),
-                        logging.StreamHandler()
-                    ])
-    
+    setup_logging(log_filename)
+
     logging.info("Script started")
 
     creds = get_credentials(creds_file, scopes)
     if not creds:
         logging.error("Error loading credentials")
         return
-    
+
     worksheet = get_worksheet(creds, sheet_id)
     if not worksheet:
         logging.error("Error accessing worksheet")
@@ -178,12 +206,14 @@ def main():
     if ticker_list_df is None or ticker_list_df.empty:
         logging.info("No data found in ticker list")
         return
-    
+
     for index, row in ticker_list_df.iterrows():
         logging.info(f"Processing ticker: {row['TickerCode']}")
         ticker_code = row["TickerCode"]
-        start_date = row["Date"].strftime('%Y-%m-%d')
-        finance_query = f"""=GOOGLEFINANCE("{ticker_code}", "all", "{start_date}", "{end_date}")"""
+        start_date = row["Date"].strftime("%Y-%m-%d")
+        finance_query = (
+            f"""=GOOGLEFINANCE("{ticker_code}", "all", "{start_date}", "{end_date}")"""
+        )
         worksheet.update_acell("A1", finance_query)
         verify_formula_loaded(worksheet)
         df = get_sheet_data(worksheet, ticker_code)
@@ -201,6 +231,7 @@ def main():
     logging.info(f"Total scrips processed: {total_scrip_count}")
     logging.info(f"Total rows inserted: {total_row_count}")
     logging.info("Script finished")
+
 
 if __name__ == "__main__":
     main()

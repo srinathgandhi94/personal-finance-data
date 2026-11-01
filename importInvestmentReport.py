@@ -5,8 +5,13 @@ from google.oauth2.service_account import Credentials
 import gspread
 from gspread.exceptions import SpreadsheetNotFound
 import logging
+from loggingSetup import setup_logging
 
-from config import GOOGLE_CREDENTIALS_PATH, GOOGLE_SHEET_ID_INVESTMENT_REPORT, DATABASE_URL
+from config import (
+    GOOGLE_CREDENTIALS_PATH,
+    GOOGLE_SHEET_ID_INVESTMENT_REPORT,
+    DATABASE_URL,
+)
 
 
 def get_credentials(creds_file, scopes):
@@ -93,17 +98,14 @@ def main():
     start_time = datetime.today()
 
     from pathlib import Path
+
     Path("Logs\\ImportInvestmentReport").mkdir(parents=True, exist_ok=True)
 
     log_filename = start_time.strftime(
         "Logs\\ImportInvestmentReport\\importInvestmentReport%Y%m%d_%H%M%S.log"
     )
 
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(levelname)s - %(message)s",
-        handlers=[logging.FileHandler(log_filename), logging.StreamHandler()],
-    )
+    setup_logging(log_filename)
 
     logging.info("Script started")
 

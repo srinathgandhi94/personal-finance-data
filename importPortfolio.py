@@ -5,6 +5,7 @@ from google.oauth2.service_account import Credentials
 import gspread
 from gspread.exceptions import SpreadsheetNotFound
 import logging
+from loggingSetup import setup_logging
 
 from config import GOOGLE_CREDENTIALS_PATH, GOOGLE_SHEET_ID_PORTFOLIO, DATABASE_URL
 
@@ -100,17 +101,14 @@ def main():
     start_time = datetime.today()
 
     from pathlib import Path
+
     Path("Logs\\ImportPortfolio").mkdir(parents=True, exist_ok=True)
 
     log_filename = start_time.strftime(
         "Logs\\ImportPortfolio\\importPorfolio_%Y%m%d_%H%M%S.log"
     )
 
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(levelname)s - %(message)s",
-        handlers=[logging.FileHandler(log_filename), logging.StreamHandler()],
-    )
+    setup_logging(log_filename)
 
     logging.info("Script started")
 

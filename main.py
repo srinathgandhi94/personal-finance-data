@@ -1,6 +1,7 @@
 import sys
 import subprocess
 import logging
+from loggingSetup import setup_logging
 from datetime import datetime
 from calendar import monthrange
 from pathlib import Path
@@ -52,11 +53,7 @@ delete_old_logs(log_directory, get_six_months_ago(start_time))
 
 log_filename = start_time.strftime("Logs\\Main\\main_%Y%m%d_%H%M%S.log")
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler(log_filename), logging.StreamHandler()],
-)
+setup_logging(log_filename)
 
 logging.info("Starting the Import Portfolio process...")
 subprocess.run([sys.executable, "importPortfolio.py"], check=True)
